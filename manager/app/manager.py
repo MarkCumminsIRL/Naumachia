@@ -2,10 +2,13 @@
 import logging
 import signal
 import threading
+import socketserver
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 
 import naum
 
+class ThreadedXMLRPCServer(socketserver.ThreadingMixIn, SimpleXMLRPCServer):
+    pass
 class RPCRequestHandler(SimpleXMLRPCRequestHandler):
     rpc_paths = ('/RPC2',)
 
@@ -27,7 +30,7 @@ def main():
     manager = naum.Manager()
 
     global server
-    server = SimpleXMLRPCServer(('0.0.0.0', 8000), requestHandler=RPCRequestHandler, logRequests=False, allow_none=True)
+    server = ThreadedXMLRPCServer(('0.0.0.0', 8000), requestHandler=RPCRequestHandler, logRequests=False, allow_none=True)
 
     # shutdown handler
     signal.signal(signal.SIGINT, sig_handler)
