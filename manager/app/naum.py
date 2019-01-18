@@ -55,9 +55,12 @@ class User:
             raise ValueError('No default network up for {}'.format(self.id))
 
         return self.challenge.ipdb.interfaces['br-'+nets[0].id[:12]]
-    def ensure_vlan_bridged(self):
+    def _vlan_ifname(self):
         suffix = '.{}'.format(self.vlan)
-        vlan_ifname = self.challenge.host_veth.ifname[:15-len(suffix)] + suffix
+        return self.challenge.host_veth.ifname[:15-len(suffix)] + suffix
+
+    def ensure_vlan_bridged(self):
+        vlan_ifname = self._vlan_ifname()
         if not vlan_ifname in self.challenge.ipdb.interfaces:
             logging.info('creating vlan %s', vlan_ifname)
             vlan_if = (self.challenge.ipdb
@@ -74,6 +77,12 @@ class User:
             (bridge_if
                 .add_port(vlan_if)
                 .commit())
+    def ensure_vlan_gone(self):
+        vlan_ifname = self._vlan_ifname()
+        if vlan_ifname in self.challenge.ipdb.interfaces:
+            logging.info('removing vlan %s', vlan_ifname)
+            with self.challenge.ipdb.interfaces[vlan_ifname] as vlan_if:
+                vlan_if.remove()
 
     def add_connection(self, address, port):
         if len(self.connections) == 0:
@@ -107,6 +116,7 @@ class User:
 
             logging.info('no connections remain of user %s to challenge %s, shutting cluster down...', self.name, self.challenge.name)
             self.stop_compose()
+            self.ensure_vlan_gone()
     def stop(self):
         self.stop_compose(timeout=2)
 
