@@ -15,10 +15,6 @@ vethhost="naumc${HOSTNAME:0:10}" # Needs to be unique on the docker host
 # Create the veth pair and throw one end of the can and string to the host
 ip link add $vethlocal type veth peer name $vethhost
 
-# Make the basic tunnel device for OpenVPN to use
-#mkdir /dev/net/
-#mknod /dev/net/tun c 10 200
-
 # Configure the tunnel device. Do not start the OpenVPN service
 openvpn --mktun --dev "$tap"
 ip link set "$tap" up promisc on
