@@ -179,7 +179,7 @@ class Challenge:
 
     def disconnect_all(self):
         with self.users_lock:
-            for u in self.users:
+            for u in self.users.values():
                 u.stop()
 
 class Manager:
