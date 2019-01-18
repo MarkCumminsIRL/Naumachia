@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 #################################
 # Set up Traffic Control redirect
@@ -8,21 +9,21 @@
 # Define the name of the TAP interface.
 # for example tap="tap0".
 tap="tap0"
-vethlocal="vth0"
-vethhost="vth${HOSTNAME:0:12}" # Needs to be unique on the docker host
+vethlocal="chal0"
+vethhost="naumc${HOSTNAME:0:10}" # Needs to be unique on the docker host
 
 # Create the veth pair and throw one end of the can and string to the host
 ip link add $vethlocal type veth peer name $vethhost
 
 # Make the basic tunnel device for OpenVPN to use
-mkdir /dev/net/
-mknod /dev/net/tun c 10 200
+#mkdir /dev/net/
+#mknod /dev/net/tun c 10 200
 
 # Configure the tunnel device. Do not start the OpenVPN service
 openvpn --mktun --dev "$tap"
-ifconfig "$tap" 0.0.0.0 promisc up
+ip link set "$tap" up promisc on
 
-ifconfig $vethlocal 0.0.0.0 promisc up
+ip link set $vethlocal up promisc on
 ip link set $vethhost netns host
 
 # Use traffic control to redirect all ingress packets on tap0 to the veth port directed at the challenge network, and vice versa. 
@@ -43,11 +44,8 @@ tc filter add dev "$vethlocal" parent ffff: u32 \
 # Place all needed env variables into a yaml file
 # This is so the nobody user can access these
 printf "\
-redis_hostname: ${REDIS_HOSTNAME}\n\
-redis_db: ${REDIS_DB}\n\
-redis_port: ${REDIS_PORT}\n\
-redis_password: ${REDIS_PASSWORD}\n\
 hostname: ${HOSTNAME}\n\
+naum_mgm_host: ${NAUM_MGM_HOST}\n\
 naum_vethhost: ${vethhost}\n\
 naum_files: ${NAUM_FILES}\n\
 naum_chal: ${NAUM_CHAL}\n\
@@ -55,7 +53,7 @@ naum_chal: ${NAUM_CHAL}\n\
 chmod 644 env.yaml
 chown nobody:nobody env.yaml
 
-/scripts/naumachia/register_vpn.py
+/scripts/naumachia/register_challenge.py
 
 echo "naumachia-start complete: now running $@"
 exec "$@"

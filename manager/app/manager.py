@@ -1,65 +1,47 @@
 #!/usr/bin/env python3
-
-from signal import signal, SIGTERM, SIGINT
-from redis import Redis
-from naumdb import DB, Address
-from workers import Listener, ClusterWorker, VlanWorker, VethWorker
 import logging
-import os
-import sys
+import signal
+import threading
+from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 
-listeners=[]
+import naum
 
-def stop_handler(signum, frame):
-    logging.info("Shutting down...")
-    for listener in listeners:
-        listener.stop()
+class RPCRequestHandler(SimpleXMLRPCRequestHandler):
+    rpc_paths = ('/RPC2',)
 
-    sys.exit(0)
+is_shutdown = False
+def shutdown():
+    global is_shutdown
+    is_shutdown = True
 
-def get_env():
-    env = {}
-    env['REDIS_HOSTNAME'] = os.getenv('REDIS_HOSTNAME', 'redis')
-    env['REDIS_DB'] = int(os.getenv('REDIS_DB', '0'))
-    env['REDIS_PORT'] = os.getenv('REDIS_PORT', '6379')
-    env['REDIS_PORT'] = int(env['REDIS_PORT'])
-    env['REDIS_PASSWORD'] = os.getenv('REDIS_PASSWORD')
-    env['LOG_LEVEL'] = os.getenv('LOG_LEVEL', None)
-    env['LOG_FILE'] = os.getenv('LOG_FILE', None)
+    logging.info('shutting down...')
+    server.shutdown()
 
-    return env
+def sig_handler(num, frame):
+    if not is_shutdown:
+        threading.Thread(target=shutdown).start()
+
+def main():
+    logging.basicConfig(level=logging.DEBUG, format='[{asctime:s}] {levelname:s}: {message:s}', style='{')
+
+    manager = naum.Manager()
+
+    global server
+    server = SimpleXMLRPCServer(('0.0.0.0', 8000), requestHandler=RPCRequestHandler, logRequests=False, allow_none=True)
+
+    # shutdown handler
+    signal.signal(signal.SIGINT, sig_handler)
+    signal.signal(signal.SIGTERM, sig_handler)
+
+    server.register_instance(manager)
+
+    # rpc loop
+    server.serve_forever()
+    server.server_close()
+
+    logging.info('cleaning up...')
+
+    manager._stop()
 
 if __name__ == "__main__":
-    env = get_env()
-
-    # Init logging
-    if env['LOG_LEVEL'] is not None:
-        loglevel = getattr(logging, env['LOG_LEVEL'].upper(), None)
-        if not isinstance(loglevel, int):
-                raise ValueError('Invalid log level: {}'.format(env['LOG_LEVEL']))
-    else:
-        loglevel = logging.INFO
-
-    logging.basicConfig(
-        format="[{asctime:s}] {levelname:s}: {message:s}",
-        level=loglevel,
-        filename=env['LOG_FILE'],
-        datefmt="%m/%d/%y %H:%M:%S",
-        style='{'
-    )
-
-    # Set up signal handler
-    signal(SIGTERM, stop_handler)
-
-    # Connect to DB
-    DB.redis = Redis(host=env['REDIS_HOSTNAME'], db=env['REDIS_DB'], port=env['REDIS_PORT'], password=env['REDIS_PASSWORD'])
-
-    # Start listeners
-    keyspace_pattern = "__keyspace@{:d}__:{:s}"
-
-    listeners.append(Listener(keyspace_pattern.format(env['REDIS_DB'], 'Connection:*:alive'), ClusterWorker))
-    listeners.append(Listener(keyspace_pattern.format(env['REDIS_DB'], 'Connection:*:alive'), VlanWorker))
-    listeners.append(Listener(keyspace_pattern.format(env['REDIS_DB'], 'Vpn:*:veth'), VethWorker))
-
-    for listener in listeners:
-        listener.start()
+    main()

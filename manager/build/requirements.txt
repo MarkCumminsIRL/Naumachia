@@ -1,4 +1,2 @@
-docker==2.7.0
-docker-compose==1.18.0
-redis==2.10.6
-trol==0.2.2
+pyroute2
+docker

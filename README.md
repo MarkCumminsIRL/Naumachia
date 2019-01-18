@@ -1,9 +1,5 @@
 # Naumachia
-Play some challenges! https://www.naumachiactf.com/
-
-[![Discord](https://img.shields.io/discord/404881131058626570.svg)](https://discord.gg/gH9ZgeT)
-
-If you are interested in using or contributing to this project let me (nategraf) know! It will grow based on input from those who care to give it.
+Fork of [nategraf/Naumachia](https://github.com/nategraf/Naumachia) with a modified cluster manager.
 
 ### A multi-tenant network sandbox for security challenges
 
@@ -12,7 +8,7 @@ If you are interested in using or contributing to this project let me (nategraf)
 The inspiration for this project comes from my love of networking and especially network security. I wanted a platform to write and play challenges where everything was in-bounds including ARP spoofing, VLAN hopping (WIP), DNS poisoning, SNMP attacks as well as destructive attacks like dropping database tables and installing backdoors without interferring with other users. Naumachia is a system I came up with to do just that.
 
 Naumachia provides:
-* Orchastration of "arbitrary" networks and hosts for challenges
+* Orchestration of "arbitrary" networks and hosts for challenges
 * Isolation of teams within dedicated challenge instances
 * "Full" ethernet access to the challenge network
 
@@ -73,7 +69,7 @@ Consider the example provided as [example/docker-compose.yml](https://github.com
 For examples of problems deployed in past CTFs go to the [Naumachia-challenges repo](https://github.com/nategraf/Naumachia-challenges)
 
 ```yaml
-version: '2.1'
+version: '3.7'
 
 # The file defines the configuration for simple Nauachia challenge
 # where a successful man-in-the-middle (MTIM) attack 

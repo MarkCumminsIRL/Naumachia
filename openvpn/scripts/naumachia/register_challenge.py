@@ -8,7 +8,7 @@ def main():
     env = get_env()
 
     with xmlrpc.client.ServerProxy(mgm_uri(env)) as client:
-        client.disconnect_user(env['NAUM_CHAL'], env['COMMON_NAME'], env['TRUSTED_IP'], int(env['TRUSTED_PORT']))
+        client.register_challenge(env['NAUM_CHAL'], env['NAUM_VETHHOST'], env['NAUM_FILES'])
 
 if __name__ == '__main__':
     main()

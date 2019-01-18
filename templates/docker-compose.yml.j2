@@ -1,4 +1,4 @@
-version: '2.1'
+version: '3'
 
 services:
     {% if eve -%}
@@ -17,24 +17,32 @@ services:
 
     {% endif -%}
     {% for name, chal in challenges.items() -%}
-    openvpn-{{ name }}:
-        extends:
-            file: openvpn-compose.yml
-            service: openvpn
+    openvpn_{{ name }}:
+        build:
+            context: ./openvpn/build
+            args:
+                - OVPN_REPO_URL
+                - OVPN_REPO_BRANCH
+        image: naumachia/openvpn
         depends_on:
-            - redis
+            - manager
         volumes:
+            - /var/run/docker/netns/default:/var/run/netns/host
+            - ./openvpn/scripts:/scripts:ro
             - ./openvpn/config/{{ name }}:/etc/openvpn
-            - ./logs/{{ name }}:/var/log
+        devices:
+            - "/dev/net/tun:/dev/net/tun"
+        cap_add:
+            - NET_ADMIN
         networks:
             default:
             internal:
         ports:
             - "{{ chal.port }}:1194/udp"
         environment:
+            - NAUM_MGM_HOST
             - NAUM_FILES={{ chal.files|tojson }}
             - NAUM_CHAL="{{ name }}"
-        restart: unless-stopped
 
     {% endfor -%}
     {% if registrar -%}
@@ -62,42 +70,22 @@ services:
         restart: unless-stopped
 
     {% endif -%}
-    redis:
-        image: redis:alpine
-        networks:
-            internal:
-                aliases:
-                    - "$REDIS_HOSTNAME"
-        volumes:
-            - ./redis/config:/usr/local/etc/redis
-            - ./logs:/data/log
-        environment:
-            - REDIS_PASSWORD
-        command: [redis-server, /usr/local/etc/redis/redis.conf, --requirepass, $REDIS_PASSWORD]
-        restart: unless-stopped
 
     manager:
         build: ./manager/build
-        depends_on:
-            - redis
-        networks: 
+        image: naumachia/manager
+        networks:
             internal:
+                 aliases:
+                     - "$NAUM_MGM_HOST"
         volumes:
             - ./manager/app:/app
             - {{ challenges_directory }}:/challenges
             - /var/run/docker.sock:/var/run/docker.sock
             - /var/run/docker/netns/default:/var/run/netns/host
-            - ./logs:/var/log
-        command: [python3, /app/manager.py]
-        environment:
-            - LOG_FILE=/var/log/manager.log
-            - REDIS_HOSTNAME
-            - REDIS_PORT
-            - REDIS_DB
-            - REDIS_PASSWORD
-        privileged: true # TODO: Narrow down privileges
-        restart: unless-stopped
-
+        cap_add:
+            - NET_ADMIN
+            - SYS_ADMIN
 
 networks:
     internal:
