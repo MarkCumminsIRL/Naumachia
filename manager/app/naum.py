@@ -74,6 +74,11 @@ class User:
         bridge_if = self._get_bridge_iface()
         if vlan_if.master != bridge_if.index:
             logging.info('adding vlan %s to bridge %s', vlan_ifname, bridge_if.ifname)
+
+            # Strip IP addresses from host bridge to prevent host attacks
+            for addr, mask in bridge_if.ipaddr:
+                bridge_if.del_ip(addr, mask)
+
             (bridge_if
                 .add_port(vlan_if)
                 .commit())
