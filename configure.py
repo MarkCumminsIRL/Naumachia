@@ -143,10 +143,10 @@ def parse_args():
             formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument('--verbosity', '-v', metavar="LEVEL", default="info", choices=('critical', 'error', 'warning', 'info', 'debug'), help="logging level to use")
-    parser.add_argument('--config', metavar="PATH", default=path.join(script_dir, 'config.yml'), help='path to Naumachia config file')
+    parser.add_argument('--config', metavar="PATH", default=path.join(script_dir, 'config.yaml'), help='path to Naumachia config file')
     parser.add_argument('--templates', metavar="PATH", default=path.join(script_dir, 'templates'), help='path to the configuration templates')
     parser.add_argument('--registrar_certs', metavar="PATH", default=path.join(script_dir, 'registrar/certs'), help='path to the configuration templates')
-    parser.add_argument('--compose', metavar="PATH", default=path.join(script_dir, 'docker-compose.yml'), help='path to the rendered docker-compose output')
+    parser.add_argument('--compose', metavar="PATH", default=path.join(script_dir, 'docker-compose.yaml'), help='path to the rendered docker-compose output')
     parser.add_argument('--ovpn_configs', metavar="PATH", default=path.join(script_dir, 'openvpn', 'config'), help='path to openvpn configurations')
     parser.add_argument('--easyrsa', metavar="PATH", default=None, help='location of easyrsa executable. If the path does not exist, easyrsa will be installed')
     parser.add_argument('--dhparam', metavar="PATH", default=path.join(script_dir, 'openvpn', 'config', 'dh.pem'), help='path to Diffie-Hellman (DH) parameters, will be created at this location if non-existent')
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     logger.info('Using easyrsa installation at %s', args.easyrsa)
 
     # Render the docker-compose file
-    template_path = path.join(args.templates, 'docker-compose.yml.j2')
+    template_path = path.join(args.templates, 'docker-compose.yaml.j2')
     render(template_path, args.compose, config)
 
     # Create and missing openvpn config directories

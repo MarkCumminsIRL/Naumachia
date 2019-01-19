@@ -12,8 +12,8 @@
 __pycache__
 
 # Filter out generated and user sepcific files
-/docker-compose.yml
-/config.yml
+/docker-compose.yaml
+/config.yaml
 
 # Filter out challenges
 /challenges

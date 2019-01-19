@@ -18,7 +18,7 @@ Access to a Naumachia-hosted challenge is achieved through an OpenVPN tunnel cre
 
 ![Naumachia architecture diagram](naumachia-architecture.svg)
 
-Challenges are specified through [Docker Compose config files](https://docs.docker.com/compose/compose-file/) (`docker-compose.yml`). Additional providers including Vagrant, and GENI and currently in the works.
+Challenges are specified through [Docker Compose config files](https://docs.docker.com/compose/compose-file/) (`docker-compose.yaml`). Additional providers including Vagrant, and GENI and currently in the works.
 
 ## Deployment
 
@@ -29,9 +29,9 @@ Challenges are specified through [Docker Compose config files](https://docs.dock
 4. Install requirements.txt for Python3 (`pip3 install -r requirements.txt`)
 
 #### Create a Challenge
-1. Write a [`docker-compose.yml` template](https://docs.docker.com/compose/compose-file/) and put it and any associated files in directory within the `challenges` directory. Check out [the example challenge](https://github.com/nategraf/Naumachia-challenges/tree/master/example) as a starting point.
-2. Modify `config.yml` to include your challenge. If you don't yet have a config.yml, checkout [`config.example.yml`](https://github.com/nategraf/Naumachia/blob/master/config.example.yml) for guidance.
-3. Run `configure.py` to generate the `docker-compose.yml` file from a Jinja2 template, OpenVPN config files, and PKI.
+1. Write a [`docker-compose.yaml` template](https://docs.docker.com/compose/compose-file/) and put it and any associated files in directory within the `challenges` directory. Check out [the example challenge](https://github.com/nategraf/Naumachia-challenges/tree/master/example) as a starting point.
+2. Modify `config.yaml` to include your challenge. If you don't yet have a config.yaml, checkout [`config.example.yaml`](https://github.com/nategraf/Naumachia/blob/master/config.example.yaml) for guidance.
+3. Run `configure.py` to generate the `docker-compose.yaml` file from a Jinja2 template, OpenVPN config files, and PKI.
 
 WARNING: When writing the compose file, do not use bind volumes (i.e. mount local directories to the container). It will not mount properly when started from the cluster-manager which handles creating and stopping challenge instances. No workaround is provided as it is the eventual intention to move toward a scalable model when you cannot control (or care about) where your challenges are deployed. See [moby/moby#28124](https://github.com/moby/moby/issues/28124) for technical discussion of the underlying reason
 
@@ -42,8 +42,8 @@ To generate a client config (with embedded certificates) for your challenge eith
 * Use the registrar CLI
   * Ex: `./registrar-cli mitm add alice` will create certs for Alice and `./registrar-cli mitm get alice` with output the configuration needed for Alice to connect to the 'MITM' challenge
 * Use the registrar server
-  * Add `registrar: {}` or a non-default registrar configration to the `config.yml` file.
-  * Secure your server by ensuring it cannot be accessed by the public or enabling TLS client verification, which is described in [`config.example.yml`](https://github.com/nategraf/Naumachia/blob/master/config.example.yml).
+  * Add `registrar: {}` or a non-default registrar configration to the `config.yaml` file.
+  * Secure your server by ensuring it cannot be accessed by the public or enabling TLS client verification, which is described in [`config.example.yaml`](https://github.com/nategraf/Naumachia/blob/master/config.example.yaml).
     * WARNING: If left unsecure, the registrar server can be used to issue a trivial DoS attack or worse against your Naumachia installation.
   * Issue REST API calls to registrar server to manage certificates and retrieve configuration files
     * `/<chal>/list?cn=<cn>` (cn optional) : List all registered certificates or certificates for a specific cn
@@ -62,9 +62,9 @@ For lack of a better method there are two steps that will need to be completed o
 
 ## How to Create a Challenge
 
-Challenges in Naumachia are defined by a `docker-compose.yml` file and the resources it launches
+Challenges in Naumachia are defined by a `docker-compose.yaml` file and the resources it launches
 
-Consider the example provided as [example/docker-compose.yml](https://github.com/nategraf/Naumachia/blob/master/challenges/example/docker-compose.yml)
+Consider the example provided as [example/docker-compose.yaml](https://github.com/nategraf/Naumachia/blob/master/challenges/example/docker-compose.yaml)
 
 For examples of problems deployed in past CTFs go to the [Naumachia-challenges repo](https://github.com/nategraf/Naumachia-challenges)
 

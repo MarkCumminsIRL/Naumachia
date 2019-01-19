@@ -5,7 +5,7 @@ eve: false
 domain: mydomain.net
 
 # [default: './challenges'] The directory which contains your challenges
-# If the the path is relative, it will be relative to the generated docker-compose.yml file
+# If the the path is relative, it will be relative to the generated docker-compose.yaml file
 challenges_directory: ./challenges
 
 # [optional] Configuration for the registrar server. Set to `null` or `false` to disable
@@ -38,8 +38,8 @@ challenges:
         # [required] The compose files to which define this challenge
         # Paths should be relative to the challenges directory
         files:
-            - example/docker-compose.yml
-            - common/docker-compose.yml
+            - example/docker-compose.yaml
+            - common/docker-compose.yaml
         # [default: {domain}.{challenge name}] The commonname used for the OpenVPN's certificates
         # This should be the domain name or ip that directs to this challenge
         commonname: foo.bar.mydomain.net
