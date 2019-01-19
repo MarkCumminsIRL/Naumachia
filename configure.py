@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import os
 from os import path, makedirs, chmod, listdir
+import shutil
 from lazycert import LazyCert
 import io
 import jinja2
@@ -147,10 +149,11 @@ def parse_args():
     parser.add_argument('--compose', metavar="PATH", default=path.join(script_dir, 'docker-compose.yml'), help='path to the rendered docker-compose output')
     parser.add_argument('--ovpn_configs', metavar="PATH", default=path.join(script_dir, 'openvpn', 'config'), help='path to openvpn configurations')
     parser.add_argument('--easyrsa', metavar="PATH", default=None, help='location of easyrsa executable. If the path does not exist, easyrsa will be installed')
+    parser.add_argument('--dhparam', metavar="PATH", default=path.join(script_dir, 'openvpn', 'config', 'dh.pem'), help='path to Diffie-Hellman (DH) parameters, will be created at this location if non-existent')
 
     return parser.parse_args()
 
-def init_pki(easyrsa, directory, cn):
+def init_pki(easyrsa, dhparam, directory, cn):
     easyrsa = path.abspath(easyrsa)
     debug = logger.isEnabledFor(logging.DEBUG)
     common_args = {
@@ -161,13 +164,17 @@ def init_pki(easyrsa, directory, cn):
         'universal_newlines': True
     }
 
+    if not os.access(dhparam, os.F_OK):
+        logger.info("Generating Diffie-Hellman (DH) parameters at %s...", dhparam)
+        subprocess.run(['openssl', 'dhparam', '-out', dhparam, '2048'], **common_args)
+
     try:
         logger.info("Initializing public key infrastructure (PKI)")
         subprocess.run([easyrsa, 'init-pki'], **common_args)
         logger.info("Building certificiate authority (CA)")
         subprocess.run([easyrsa, 'build-ca', 'nopass'], input="{}.{}\n".format('ca', cn), **common_args)
-        logger.info("Generating Diffie-Hellman (DH) parameters")
-        subprocess.run([easyrsa, 'gen-dh'], **common_args)
+        logger.info("Copying Diffie-Hellman (DH) parameters")
+        shutil.copyfile(dhparam, path.join(directory, 'pki', 'dh.pem'))
         logger.info("Building server certificiate")
         subprocess.run([easyrsa, 'build-server-full', cn, 'nopass'], **common_args)
         logger.info("Generating certificate revocation list (CRL)")
@@ -236,7 +243,7 @@ if __name__ == "__main__":
             makedirs(config_dirname)
             logger.info("Created new openvpn config directory {}".format(config_dirname))
 
-            init_pki(args.easyrsa, config_dirname, chal['commonname'])
+            init_pki(args.easyrsa, args.dhparam, config_dirname, chal['commonname'])
         else:
             logger.info("Using existing openvpn config directory {}".format(config_dirname))
 
