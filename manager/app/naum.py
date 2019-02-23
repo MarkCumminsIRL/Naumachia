@@ -1,5 +1,6 @@
 import base64
 import random
+import time
 from os import path
 import logging
 import threading
@@ -138,6 +139,9 @@ class Challenge:
     def __init__(self, ipdb, dockerc, name, host_veth, compose_files):
         self.ipdb = ipdb
         self.dockerc = dockerc
+
+        # Hack to wait for the interface to be visible
+        time.sleep(0.5)
         self.host_veth = ipdb.interfaces[host_veth]
         (self.host_veth
             .up()
